@@ -179,27 +179,40 @@ const parseMqttPayload = (raw) => {
   }
 };
 
-const mqttClient = mqtt.connect(config.mqttBrokerUrl);
-mqttClient.on("connect", () => {
-  mqttClient.subscribe(config.mqttTopic, (err) => {
-    if (!err) {
+const startMqttSubscriber = () => {
+  const mqttClient = mqtt.connect(config.mqttBrokerUrl);
+
+  mqttClient.on("connect", () => {
+    mqttClient.subscribe(config.mqttTopic, (err) => {
+      if (err) {
+        console.error("MQTT subscribe failed:", err.message);
+        return;
+      }
       console.log(`Subscribed to ${config.mqttTopic}`);
+    });
+  });
+
+  mqttClient.on("error", (err) => {
+    console.error("MQTT connection error:", err.message);
+  });
+
+  mqttClient.on("message", async (_topic, message) => {
+    const payload = parseMqttPayload(message);
+    if (!payload || Number.isNaN(payload.temperature) || Number.isNaN(payload.humidity)) return;
+
+    try {
+      lastSensorPayload = payload;
+      lastHeartbeatMs = Date.now();
+      deviceOnline = true;
+
+      const saved = await SensorData.create(payload);
+      io.emit("sensor:update", saved);
+      await checkThresholds(payload);
+    } catch (err) {
+      console.error("Failed to process sensor payload:", err.message);
     }
   });
-});
-
-mqttClient.on("message", async (_topic, message) => {
-  const payload = parseMqttPayload(message);
-  if (!payload || Number.isNaN(payload.temperature) || Number.isNaN(payload.humidity)) return;
-
-  lastSensorPayload = payload;
-  lastHeartbeatMs = Date.now();
-  deviceOnline = true;
-
-  const saved = await SensorData.create(payload);
-  io.emit("sensor:update", saved);
-  await checkThresholds(payload);
-});
+};
 
 setInterval(() => {
   const stale = Date.now() - lastHeartbeatMs > 120000;
@@ -299,6 +312,8 @@ app.get("/api/export/:format", async (req, res) => {
 
 const bootstrap = async () => {
   await mongoose.connect(config.mongodbUri);
+  console.log("MongoDB connected");
+  startMqttSubscriber();
 
   const lastSettings = await Alert.findOne({ type: "settings" }).sort({ createdAt: -1 });
   if (lastSettings) {
