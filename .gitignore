@@ -1,0 +1,9 @@
+node_modules/
+**/node_modules/
+.env
+backend/.env
+mobile/.expo
+*.log
+.vscode/
+dist/
+build/

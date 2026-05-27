@@ -1,0 +1,25 @@
+services:
+  - type: web
+    name: iot-monitor-backend
+    env: node
+    rootDir: backend
+    plan: free
+    buildCommand: npm install
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MQTT_BROKER_URL
+        value: mqtt://broker.hivemq.com:1883
+      - key: MQTT_TOPIC
+        value: iot/esp32/dht22
+      - key: MONGODB_URI
+        sync: false
+      - key: GMAIL_USER
+        sync: false
+      - key: GMAIL_APP_PASSWORD
+        sync: false
+      - key: ALERT_EMAIL_DEFAULT
+        sync: false

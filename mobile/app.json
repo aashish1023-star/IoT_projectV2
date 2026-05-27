@@ -1,0 +1,11 @@
+{
+  "expo": {
+    "name": "IoT Monitor",
+    "slug": "iot-monitor",
+    "version": "1.0.0",
+    "orientation": "default",
+    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
+    "platforms": ["android", "ios", "web"]
+  }
+}
