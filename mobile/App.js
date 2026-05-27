@@ -30,7 +30,8 @@ import { io } from "socket.io-client";
 
 const Tab = createBottomTabNavigator();
 const { width } = Dimensions.get("window");
-const API_BASE = process.env.EXPO_PUBLIC_API_BASE || "http://localhost:5000";
+const API_BASE =
+  process.env.EXPO_PUBLIC_API_BASE || "https://iot-monitor-backend-hmar.onrender.com";
 
 const initialSettings = {
   minTemp: "15",
